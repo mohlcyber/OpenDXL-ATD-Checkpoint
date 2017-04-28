@@ -40,7 +40,7 @@ def action(ip):
     add_host_group_data = {'name':ip, 'groups':'BadIPList'}
     add_host_group = api_call(mgmtip, port, 'set-host', add_host_group_data, sid)
     print(json.dumps(add_host_group))
-    time.sleep(5)
+    time.sleep(2)
 
     publish = api_call(mgmtip, port,"publish", {},sid)
     print("publish result: " + json.dumps(publish))
