@@ -17,7 +17,7 @@ next generation firewall platform. https://www.checkpoint.com/products-solutions
 ## Prerequisites
 McAfee ATD solution (tested with ATD 3.8)
 
-Download the [Latest Release](https://github.com/vkrish-mcafee/OpenDXL-ATD-Checkpoint/releases)
+Download the [Latest Release](https://github.com/mohl1/OpenDXL-ATD-Checkpoint/releases)
 * Extract the release .zip file
 
 OpenDXL Python installation
