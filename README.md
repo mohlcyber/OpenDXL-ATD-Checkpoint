@@ -17,8 +17,16 @@ next generation firewall platform. https://www.checkpoint.com/products-solutions
 ## Prerequisites
 McAfee ATD solution (tested with ATD 3.8)
 
+Download the [Latest Release](https://github.com/vkrish-mcafee/OpenDXL-ATD-Checkpoint/releases)
+* Extract the release .zip file
+
 OpenDXL Python installation
 1. Python SDK Installation ([Link](https://opendxl.github.io/opendxl-client-python/pydoc/installation.html))
+    Install the required dependencies with the requirements.txt file:
+    ```sh
+    $ pip install -r requirements.txt
+    ```
+    This will install the dxlclient, and requests modules.    
 2. Certificate Files Creation ([Link](https://opendxl.github.io/opendxl-client-python/pydoc/certcreation.html))
 3. ePO Certificate Authority (CA) Import ([Link](https://opendxl.github.io/opendxl-client-python/pydoc/epocaimport.html))
 4. ePO Broker Certificates Export ([Link](https://opendxl.github.io/opendxl-client-python/pydoc/epobrokercertsexport.html))
