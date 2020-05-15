@@ -1,53 +1,82 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# Written by mohlcyber 15.05.2020 v.0.2
 
-import requests, json, time
+import sys
+import requests
+import json
+import time
 
-mgmtip = "ip-addr"
-port = "443"
-user = "api"
-pw = "password"
+requests.packages.urllib3.disable_warnings()
 
-def api_call(ip_addr, port, command, json_payload, sid):
-    url = 'https://' + str(ip_addr) + ':' + str(port) + '/web_api/' + command
-    if sid == '':
-        request_headers = {'Content-Type' : 'application/json'}
-    else:
-        request_headers = {'Content-Type' : 'application/json', 'X-chkp-sid' : sid}
-    r = requests.post(url,data=json.dumps(json_payload), headers=request_headers, verify=False)
-    return r.json()
 
-def login(user,password):
-    payload = {'user':user, 'password' : password, 'continue-last-session':'true'}
-    response = api_call(mgmtip, port, 'login', payload, '')
-    return response["sid"]
+class Checkpoint():
+    def __init__(self, ip):
+        cpip = 'ip-addr'
+        cpport = '443'
+        self.base_url = 'https://{0}:{1}/web_api/'.format(str(cpip), str(cpport))
+        self.verify = False
 
-def action(ip):
+        self.user = 'api'
+        self.pw = 'password'
 
-    sid = login(user,pw)
-    print("session id: " + sid)
-    
-    # Create a new group called BadIPList
-    group_data = {'name':'BadIPList'}
-    group = api_call(mgmtip, port,'add-group', group_data ,sid)
-    print(json.dumps(group))
+        self.group = 'BadIPList'
+        self.ip = ip
 
-    # Create a new host
-    new_host_data = {'name':ip, 'ip-address':ip, 'comments':'Set Via OpenDXL'}
-    new_host = api_call(mgmtip, port,'add-host', new_host_data ,sid)
-    print(json.dumps(new_host))
+        self.session = requests.Session()
+        self.headers = {'Content-Type': 'application/json'}
+        self.login()
 
-    # Add the new created host to the BadIPList group
-    add_host_group_data = {'name':ip, 'groups':'BadIPList'}
-    add_host_group = api_call(mgmtip, port, 'set-host', add_host_group_data, sid)
-    print(json.dumps(add_host_group))
-    time.sleep(2)
+        self.main()
 
-    publish = api_call(mgmtip, port,"publish", {},sid)
-    print("publish result: " + json.dumps(publish))
-    time.sleep(5)
+    def login(self):
+        try:
+            payload = {
+                'user': self.user,
+                'password' : self.pw,
+                'continue-last-session': 'true'
+            }
 
-    logout_result = api_call(mgmtip, 443,"logout", {},sid)
-    print("logout result: " + json.dumps(logout_result))
-    print("Finished to import bad IP address")    
+            res = self.session.post(self.base_url + 'login', data=json.dumps(payload),
+                                    headers=self.headers, verify=self.verify)
 
-    return ip
+            if res.status_code == 200:
+                self.headers['X-chkp-sid'] = res.json()["sid"]
+            else:
+                print('ERROR: login() - {0} - {1}'.format(str(res.status_code), res.text))
+                sys.exit()
+        except Exception as error:
+            print('ERROR: login() - {0}'.format(str(error)))
+
+    def api_call(self, command, payload):
+        try:
+            res = self.session.post(self.base_url + command, data=json.dumps(payload),
+                                    headers=self.headers, verify=self.verify)
+
+            if res.status_code == 200:
+                print('STATUS: Run {0}.'.format(command))
+            else:
+                print('ERROR: api_call() - command: {0} - http: {1}-{2}'.format(command, res.status_code, res.text))
+        except Exception as error:
+            print('ERROR: api_call() - {0}'.format(str(error)))
+            self.api_call('logout', {})
+
+    def main(self):
+        # self.api_call('show-group', {'name': self.group})
+        # group_data = {'name': 'BadIPList'}
+        # self.api_call('add-group', group_data)
+
+        new_host_data = {'name': self.ip, 'ip-address': self.ip, 'comments': 'Set Via OpenDXL'}
+        self.api_call('add-host', new_host_data)
+
+        add_host_group_data = {'name': self.ip, 'groups': self.group}
+        self.api_call('set-host', add_host_group_data)
+        time.sleep(2)
+
+        self.api_call('publish', {})
+        time.sleep(5)
+
+        self.api_call('logout', {})
+        print("SUCCESS: Finished to import bad IP address")
+
+if __name__ == '__main__':
+    Checkpoint(sys.argv[1])

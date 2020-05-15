@@ -1,17 +1,14 @@
 #!/usr/bin/env python
 
 import logging
-import os
-import sys
 import time
 import json
-import threading
 import importlib
 
 from dxlclient.callbacks import EventCallback
 from dxlclient.client import DxlClient
 from dxlclient.client_config import DxlClientConfig
-from dxlclient.message import Event, Request
+from cp_push import Checkpoint
 
 # Configure local logger
 logging.getLogger().setLevel(logging.ERROR)
@@ -42,11 +39,11 @@ with DxlClient(config) as client:
                     for ips in query['Summary']['Ips']:
                         ipv4 = ips['Ipv4']
                         if not ipv4: pass
-                        else: cppush.action(ipv4)
+                        else: Checkpoint(ipv4)
                 except: pass
  
-            except Exception as e:
-                print e
+            except Exception as error:
+                print(error)
 
         @staticmethod
         def worker_thread(req):
